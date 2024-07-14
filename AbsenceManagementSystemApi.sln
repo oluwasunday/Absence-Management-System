@@ -5,6 +5,12 @@ VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbsenceManagementSystemApi", "AbsenceManagementSystemApi\AbsenceManagementSystemApi.csproj", "{BF183BF0-92EF-4C13-A01E-0E92408B8818}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbsenceManagementSystem.Core", "AbsenceManagementSystem.Core\AbsenceManagementSystem.Core.csproj", "{A0D7A5F2-3222-490C-9224-D3D2BD13C818}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbsenceManagementSystem.Services", "AbsenceManagementSystem.Services\AbsenceManagementSystem.Services.csproj", "{64E13210-B170-4EE1-9598-3099DF64A739}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbsenceManagementSystem.Infrastructure", "AbsenceManagementSystem.Infrastructure\AbsenceManagementSystem.Infrastructure.csproj", "{7ECC5113-2AF3-4C03-AED0-7D568FBC6983}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{BF183BF0-92EF-4C13-A01E-0E92408B8818}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF183BF0-92EF-4C13-A01E-0E92408B8818}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF183BF0-92EF-4C13-A01E-0E92408B8818}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0D7A5F2-3222-490C-9224-D3D2BD13C818}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0D7A5F2-3222-490C-9224-D3D2BD13C818}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0D7A5F2-3222-490C-9224-D3D2BD13C818}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0D7A5F2-3222-490C-9224-D3D2BD13C818}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64E13210-B170-4EE1-9598-3099DF64A739}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64E13210-B170-4EE1-9598-3099DF64A739}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64E13210-B170-4EE1-9598-3099DF64A739}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64E13210-B170-4EE1-9598-3099DF64A739}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ECC5113-2AF3-4C03-AED0-7D568FBC6983}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ECC5113-2AF3-4C03-AED0-7D568FBC6983}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ECC5113-2AF3-4C03-AED0-7D568FBC6983}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ECC5113-2AF3-4C03-AED0-7D568FBC6983}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
