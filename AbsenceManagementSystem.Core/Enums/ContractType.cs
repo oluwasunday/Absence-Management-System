@@ -17,4 +17,16 @@ namespace AbsenceManagementSystem.Core.Enums
         Female,
         Male        
     }
+
+    public enum MaritalStatus
+    {
+        Single,
+        Married        
+    }
+
+    public enum EmploymentType
+    {
+        PartTime,
+        FullTime        
+    }
 }

@@ -7,9 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTO\" />
-    <Folder Include="IRepositories\" />
-    <Folder Include="IServices\" />
     <Folder Include="Common\" />
   </ItemGroup>
 

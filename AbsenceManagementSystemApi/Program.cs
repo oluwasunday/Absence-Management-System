@@ -1,6 +1,10 @@
 using AbsenceManagementSystem.Core.Domain;
+using AbsenceManagementSystem.Core.IRepositories;
+using AbsenceManagementSystem.Core.IServices;
 using AbsenceManagementSystem.Infrastructure.DataSeeder;
 using AbsenceManagementSystem.Infrastructure.DbContext;
+using AbsenceManagementSystem.Infrastructure.Repositories;
+using AbsenceManagementSystem.Services.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,6 +38,10 @@ namespace AbsenceManagementSystemApi
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            //
+            builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
             var app = builder.Build();
 
