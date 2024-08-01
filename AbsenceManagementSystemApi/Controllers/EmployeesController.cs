@@ -40,6 +40,28 @@ namespace AbsenceManagementSystemApi.Controllers
             }
         }
 
-        
+        // GET: EmployeesController
+        [HttpGet("{employeeid}")]
+        public async Task<IActionResult> GetEmployeeById(string employeeid)
+        {
+            var result = await _employeeService.GetEmployeeByIdAsync(employeeid);
+            return Ok(result);
+        }
+
+        // PUT: EmployeesController
+        [HttpPut("")]
+        public async Task<IActionResult> EditEmployee(EmployeeDto employeeDto)
+        {
+            var result = await _employeeService.EditEmployeeByIdAsync(employeeDto);
+            return Ok(result);
+        }
+
+        // DELETE: EmployeesController
+        [HttpDelete("")]
+        public async Task<IActionResult> DeeleteEmployee(string employeeId)
+        {
+            var result = await _employeeService.DeleteEmployeeAsync(employeeId);
+            return Ok(result);
+        }
     }
 }

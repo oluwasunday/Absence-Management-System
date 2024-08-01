@@ -10,6 +10,7 @@ namespace AbsenceManagementSystem.Core.IRepositories.Base
     public interface IRepository<TEntity> where TEntity : class
     {
         void Add(TEntity entity);
+        Task AddAsync(TEntity entity);
         Task AddRangeAsync(IEnumerable<TEntity> entities);
         Task<bool> ExistAsync(Expression<Func<TEntity, bool>> predicate);
         Task<TEntity> Get(Guid id);

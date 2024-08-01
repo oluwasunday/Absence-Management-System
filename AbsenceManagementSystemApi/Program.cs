@@ -1,6 +1,7 @@
 using AbsenceManagementSystem.Core.Domain;
 using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
+using AbsenceManagementSystem.Core.UnitOfWork;
 using AbsenceManagementSystem.Infrastructure.DataSeeder;
 using AbsenceManagementSystem.Infrastructure.DbContext;
 using AbsenceManagementSystem.Infrastructure.Repositories;
@@ -42,6 +43,10 @@ namespace AbsenceManagementSystemApi
             //
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IEmployeeLeaveRequestService, EmployeeLeaveRequestService>();
+            builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
+            builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
             var app = builder.Build();
 

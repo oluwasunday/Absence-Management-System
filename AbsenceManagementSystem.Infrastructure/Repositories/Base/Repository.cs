@@ -58,6 +58,11 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories.Base
             _context.Set<TEntity>().Add(entity);
         }
 
+        public virtual async Task AddAsync(TEntity entity)
+        {
+            await _context.Set<TEntity>().AddAsync(entity);
+        }
+
         public async Task AddRangeAsync(IEnumerable<TEntity> entities)
         {
             await _context.Set<TEntity>().AddRangeAsync(entities);

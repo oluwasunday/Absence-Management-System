@@ -1,4 +1,5 @@
 ﻿using AbsenceManagementSystem.Core.DTO;
+using AbsenceManagementSystem.Core.Handlers;
 using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
 
@@ -21,6 +22,21 @@ namespace AbsenceManagementSystem.Services.Services
         public async Task<List<EmployeeDto>> GetAllEmployeesAsync()
         {
             return await _employeeRepository.GetAllEmployeesAsync();
+        }
+
+        public async Task<Response<EmployeeDto>> GetEmployeeByIdAsync(string employeeId)
+        {
+            return await _employeeRepository.GetEmployeeByIdAsync(employeeId);
+        }
+
+        public async Task<Response<bool>> EditEmployeeByIdAsync(EmployeeDto employeeDto)
+        {
+            return await _employeeRepository.EditEmployeeByIdAsync(employeeDto);
+        }
+
+        public async Task<Response<bool>> DeleteEmployeeAsync(string employeeId)
+        {
+            return await _employeeRepository.DeleteEmployeeAsync(employeeId);
         }
     }
 }
