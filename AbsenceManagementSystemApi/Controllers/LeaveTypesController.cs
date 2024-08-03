@@ -1,11 +1,13 @@
 ﻿using AbsenceManagementSystem.Core.DTO;
 using AbsenceManagementSystem.Core.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AbsenceManagementSystemApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class LeaveTypesController : ControllerBase
     {
         private readonly ILeaveTypeService _leaveTypeService;

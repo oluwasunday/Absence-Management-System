@@ -119,6 +119,45 @@ namespace AbsenceManagementSystem.Services.Services
             }
         }
 
+        public async Task<Response<List<EmployeeLeaveRequesResponsetDto>>> GetAllLeaveRequestsByEmployeeIdAsync(string employeeId)
+        {
+            try
+            {
+                var leaveRequests = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.EmployeeId == employeeId && x.IsActive && !x.IsDeleted)
+                    .Select(x => new EmployeeLeaveRequesResponsetDto()
+                    {
+                        Id = x.Id,
+                        StartDate = x.StartDate,
+                        RequestDate = x.DateCreated,
+                        EmployeeName = x.EmployeeName,
+                        EmployeeId = x.EmployeeId,
+                        EndDate = x.EndDate,
+                        NumberOfDaysOff = x.NumberOfDaysOff,
+                        LeaveType = x.LeaveType,
+                        Status = x.Status
+                    }
+                ).ToListAsync();
+
+                return new Response<List<EmployeeLeaveRequesResponsetDto>>()
+                {
+                    StatusCode = StatusCodes.Status200OK,
+                    Succeeded = true,
+                    Data = leaveRequests,
+                    Message = $"Success!"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<EmployeeLeaveRequesResponsetDto>>()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Succeeded = false,
+                    Data = null,
+                    Message = $"{ex.Message} - {ex.StackTrace}"
+                };
+            }
+        }
+
         public async Task<Response<bool>> UpdateLeaveRequestStatusAsync(LeaveStatus status, string id)
         {
             try
@@ -151,38 +190,94 @@ namespace AbsenceManagementSystem.Services.Services
             }
         }
 
-        /*public async Task<Response<LeaveTypeResponseDto>> GetLeaveTypeAsync(string typeId)
+        public async Task<Response<bool>> EditLeaveRequestStatusAsync(EmployeeLeaveRequestDto requestDto)
         {
             try
             {
-                var leaveType = await _unitOfWork.LeaveTypes.GetAllAsQueryable().Where(x => x.Id == typeId && x.IsActive && !x.IsDeleted)
-                    .Select(x => new LeaveTypeResponseDto()
-                    {
-                        Id = x.Id,
-                        DateCreated = x.DateCreated,
-                        Type = x.Type,
-                        DefaultNumberOfDays = x.DefaultNumberOfDays
-                    }
-                ).FirstOrDefaultAsync();
+                var leaveRequest = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().FirstOrDefaultAsync(x => x.Id == requestDto.EmployeeId && x.IsActive && !x.IsDeleted);
 
-                return new Response<LeaveTypeResponseDto>()
+                if (leaveRequest == null)
+                {
+                    return new Response<bool>()
+                    {
+                        StatusCode = StatusCodes.Status404NotFound,
+                        Succeeded = true,
+                        Data = false,
+                        Message = $"Not found!"
+                    };
+                }
+
+                leaveRequest.LeaveType = requestDto.LeaveType;
+                leaveRequest.NumberOfDaysOff = requestDto.NumberOfDaysOff;
+                leaveRequest.StartDate = requestDto.StartDate;
+                leaveRequest.EndDate = requestDto.EndDate;
+                leaveRequest.DateModified = DateTime.Now;
+
+                _unitOfWork.EmployeeLeaveRequests.Update(leaveRequest);
+                await _unitOfWork.CompleteAsync();
+
+                return new Response<bool>()
                 {
                     StatusCode = StatusCodes.Status200OK,
                     Succeeded = true,
-                    Data = leaveType,
+                    Data = true,
                     Message = $"Success!"
                 };
             }
             catch (Exception ex)
             {
-                return new Response<LeaveTypeResponseDto>()
+                return new Response<bool>()
                 {
                     StatusCode = StatusCodes.Status500InternalServerError,
                     Succeeded = false,
-                    Data = null,
+                    Data = false,
                     Message = $"{ex.Message} - {ex.StackTrace}"
                 };
             }
-        }*/
+        }
+
+        public async Task<Response<bool>> DeleteLeaveRequestStatusAsync(string requestId)
+        {
+            try
+            {
+                var leaveRequest = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().FirstOrDefaultAsync(x => x.Id == requestId && x.IsActive && !x.IsDeleted);
+
+                if(leaveRequest == null)
+                {
+                    return new Response<bool>()
+                    {
+                        StatusCode = StatusCodes.Status404NotFound,
+                        Succeeded = true,
+                        Data = false,
+                        Message = $"Not found or already deleted!"
+                    };
+                }
+
+                leaveRequest.IsActive = false;
+                leaveRequest.IsDeleted = true;
+                leaveRequest.DateModified = DateTime.Now;
+
+                _unitOfWork.EmployeeLeaveRequests.Update(leaveRequest);
+                await _unitOfWork.CompleteAsync();
+
+                return new Response<bool>()
+                {
+                    StatusCode = StatusCodes.Status200OK,
+                    Succeeded = true,
+                    Data = true,
+                    Message = $"Success!"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response<bool>()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Succeeded = false,
+                    Data = false,
+                    Message = $"{ex.Message} - {ex.StackTrace}"
+                };
+            }
+        }
     }
 }

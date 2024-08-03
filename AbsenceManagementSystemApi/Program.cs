@@ -58,18 +58,6 @@ namespace AbsenceManagementSystemApi
             builder.Services.AddAuthorization();
             //builder.Services.AddRouting();
             builder.Services.AddControllers();
-/*            builder.Services.AddControllers(opt => {
-                var policy = new AuthorizationPolicyBuilder("Bearer").RequireAuthenticatedUser().Build();
-                opt.Filters.Add(new AuthorizeFilter(policy));
-            });*/
-
-            //builder.Logging.ClearProviders();
-            //builder.Logging.AddConsole();
-            //builder.Logging.AddDebug();
-
-
-            
-
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwagger();

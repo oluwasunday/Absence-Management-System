@@ -42,4 +42,10 @@ namespace AbsenceManagementSystem.Core.DTO
         public LeaveTypes LeaveType { get; set; }
         public LeaveStatus Status { get; set; }
     }
+
+    public class UpdateEmployeeLeaveRequesDto
+    {
+        public string Id { get; set; }
+        public LeaveStatus Status { get; set; }
+    }
 }
