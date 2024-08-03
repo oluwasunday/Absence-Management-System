@@ -119,6 +119,38 @@ namespace AbsenceManagementSystem.Services.Services
             }
         }
 
+        public async Task<Response<bool>> UpdateLeaveRequestStatusAsync(LeaveStatus status, string id)
+        {
+            try
+            {
+                var leaveRequest = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().FirstOrDefaultAsync(x => x.Id == id && x.IsActive && !x.IsDeleted);
+
+                leaveRequest.Status = status;
+                leaveRequest.DateModified = DateTime.Now;
+
+                _unitOfWork.EmployeeLeaveRequests.Update(leaveRequest);
+                await _unitOfWork.CompleteAsync();
+
+                return new Response<bool>()
+                {
+                    StatusCode = StatusCodes.Status200OK,
+                    Succeeded = true,
+                    Data = true,
+                    Message = $"Success!"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response<bool>()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Succeeded = false,
+                    Data = false,
+                    Message = $"{ex.Message} - {ex.StackTrace}"
+                };
+            }
+        }
+
         /*public async Task<Response<LeaveTypeResponseDto>> GetLeaveTypeAsync(string typeId)
         {
             try

@@ -1,4 +1,5 @@
 ﻿using AbsenceManagementSystem.Core.DTO;
+using AbsenceManagementSystem.Core.Enums;
 using AbsenceManagementSystem.Core.Handlers;
 
 namespace AbsenceManagementSystem.Core.IServices
@@ -7,5 +8,6 @@ namespace AbsenceManagementSystem.Core.IServices
     {
         Task<Response<EmployeeLeaveRequesResponsetDto>> AddNewLeaveRequestAsync(EmployeeLeaveRequestDto requestDto);
         Task<Response<List<EmployeeLeaveRequesResponsetDto>>> GetAllLeaveRequestsAsync();
+        Task<Response<bool>> UpdateLeaveRequestStatusAsync(LeaveStatus status, string id);
     }
 }

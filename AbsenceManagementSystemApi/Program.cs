@@ -6,7 +6,10 @@ using AbsenceManagementSystem.Infrastructure.DataSeeder;
 using AbsenceManagementSystem.Infrastructure.DbContext;
 using AbsenceManagementSystem.Infrastructure.Repositories;
 using AbsenceManagementSystem.Services.Services;
+using AbsenceManagementSystemApi.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace AbsenceManagementSystemApi
@@ -19,7 +22,7 @@ namespace AbsenceManagementSystemApi
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
             // For Entity Framework Core
@@ -31,14 +34,13 @@ namespace AbsenceManagementSystemApi
                 options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequireUppercase = true;
-                options.Password.RequiredLength = 6;
-                options.Password.RequiredUniqueChars = 1;
+                options.Password.RequiredLength = 8;
+                //options.Password.RequiredUniqueChars = 1;
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = false;
             })
             .AddEntityFrameworkStores<AMSDbContext>()
             .AddDefaultTokenProviders();
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
 
             //
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -48,7 +50,40 @@ namespace AbsenceManagementSystemApi
             builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
             builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
+            builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+            builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+            builder.Services.AddScoped<ITokenGeneratorService, TokenGeneratorService>();
+
+            builder.Services.ConfigureAuthentication(builder.Configuration);
+            builder.Services.AddAuthorization();
+            //builder.Services.AddRouting();
+            builder.Services.AddControllers();
+/*            builder.Services.AddControllers(opt => {
+                var policy = new AuthorizationPolicyBuilder("Bearer").RequireAuthenticatedUser().Build();
+                opt.Filters.Add(new AuthorizeFilter(policy));
+            });*/
+
+            //builder.Logging.ClearProviders();
+            //builder.Logging.AddConsole();
+            //builder.Logging.AddDebug();
+
+
+            
+
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwagger();
+
+            builder.Services.AddCors(c =>
+            {
+                c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin());
+            });
+
             var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Absence Mgt. System Api v1"));
 
             // Apply migrations at startup
             using (var scope = app.Services.CreateScope())
@@ -66,19 +101,25 @@ namespace AbsenceManagementSystemApi
                 }
             }
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            app.Use(async (context, next) =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                Console.WriteLine($"Request Path: {context.Request.Path}");
+                Console.WriteLine($"Authorization Header: {context.Request.Headers["Authorization"]}");
+                await next.Invoke();
+            });
 
             app.UseHttpsRedirection();
+            app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
-
-            app.MapControllers();
+            //app.MapControllers();
+            app.UseCors("AllowOrigin");
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
 
             app.Run();
         }

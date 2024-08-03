@@ -6,8 +6,8 @@ namespace AbsenceManagementSystem.Core.Domain
 {
     public class Employee : IdentityUser
     {
-        [Key]
-        public string Id { get; set; }
+        /*[Key]
+        public override string Id { get; set; }*/
         public bool IsActive { get; set; }
         [MaxLength(50)]
         [Required]
@@ -25,5 +25,6 @@ namespace AbsenceManagementSystem.Core.Domain
         public DateTime DateCreated { get; set; } = DateTime.Now;
         public DateTime DateModified { get; set; }
         public string RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AbsenceManagementSystem.Core.DTO;
 using AbsenceManagementSystem.Core.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace AbsenceManagementSystemApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
@@ -17,7 +19,8 @@ namespace AbsenceManagementSystemApi.Controllers
         }
 
         // GET: EmployeesController
-        [HttpGet("")]
+        [HttpGet]
+        [Route("")]
         public async Task<IActionResult> GetAllEmployes()
         {
             var result = await _employeeService.GetAllEmployeesAsync();
@@ -26,7 +29,6 @@ namespace AbsenceManagementSystemApi.Controllers
 
         // POST: EmployeesController/Create
         [HttpPost("")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddNewEmployee(EmployeeDto employee)
         {
             try
@@ -58,7 +60,7 @@ namespace AbsenceManagementSystemApi.Controllers
 
         // DELETE: EmployeesController
         [HttpDelete("")]
-        public async Task<IActionResult> DeeleteEmployee(string employeeId)
+        public async Task<IActionResult> DeleteEmployee(string employeeId)
         {
             var result = await _employeeService.DeleteEmployeeAsync(employeeId);
             return Ok(result);

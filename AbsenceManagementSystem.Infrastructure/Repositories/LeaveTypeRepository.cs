@@ -2,6 +2,7 @@
 using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Infrastructure.DbContext;
 using AbsenceManagementSystem.Infrastructure.Repositories.Base;
+using System;
 
 namespace AbsenceManagementSystem.Infrastructure.Repositories
 {
