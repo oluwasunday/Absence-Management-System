@@ -9,5 +9,7 @@ namespace AbsenceManagementSystem.Infrastructure.DbContext
         public AMSDbContext(DbContextOptions<AMSDbContext> options) : base(options) { }
 
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<LeaveType> LeaveTypes { get; set; }
+        public DbSet<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; }
     }
 }

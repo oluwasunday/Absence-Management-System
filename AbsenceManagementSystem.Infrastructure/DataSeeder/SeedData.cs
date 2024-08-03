@@ -60,7 +60,6 @@ namespace AbsenceManagementSystem.Infrastructure.DataSeeder
                         DateModified = DateTime.Now,
                         EmailConfirmed = true,
                         PhoneNumberConfirmed = true
-
                     },
                     new Employee
                     {
