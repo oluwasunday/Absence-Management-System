@@ -1,4 +1,5 @@
 using AbsenceManagementSystem.Core.Domain;
+using AbsenceManagementSystem.Core.DTO;
 using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
 using AbsenceManagementSystem.Core.UnitOfWork;
@@ -7,9 +8,7 @@ using AbsenceManagementSystem.Infrastructure.DbContext;
 using AbsenceManagementSystem.Infrastructure.Repositories;
 using AbsenceManagementSystem.Services.Services;
 using AbsenceManagementSystemApi.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace AbsenceManagementSystemApi
@@ -53,6 +52,10 @@ namespace AbsenceManagementSystemApi
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<ITokenRepository, TokenRepository>();
             builder.Services.AddScoped<ITokenGeneratorService, TokenGeneratorService>();
+
+            // configure mail service
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.AddTransient<IEmailService, EmailService>();
 
             builder.Services.ConfigureAuthentication(builder.Configuration);
             builder.Services.AddAuthorization();
