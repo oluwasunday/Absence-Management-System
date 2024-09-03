@@ -38,7 +38,7 @@ namespace AbsenceManagementSystemApi.Controllers
             }
             catch
             {
-                return BadRequest();
+                return BadRequest(employee);
             }
         }
 

@@ -19,78 +19,118 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
             _userManager = userManager;
         }
 
-        public async Task<EmployeeDto> AddNewEmployeeAsync(EmployeeDto user)
+        public async Task<Response<EmployeeDto>> AddNewEmployeeAsync(EmployeeDto user)
         {
             if (user == null)
             {
                 throw new ArgumentNullException();
             }
 
-            Employee employee = new Employee()
+            var response = new Response<EmployeeDto>()
             {
-                Id = Guid.NewGuid().ToString(),
-                StartDate = DateTime.Now,
-                MaritalStatus = user.MaritalStatus,
-                DateCreated = DateTime.Now,
-                DateModified = DateTime.Now,
-                DateOfBirth = DateTime.Now,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                UserName = user.UserName,
-                Gender = user.Gender,
-                EmailConfirmed = true,
-                PhoneNumberConfirmed = true,
-                PhoneNumber = user.PhoneNumber,
-                IsActive = true,
-                TotalHolidayEntitlement = 100,
-                ContractType = ContractType.FullTime
+                StatusCode = 200,
+                Data = new EmployeeDto(),
+                Succeeded = false,
+                Errors = null,
+                Message = string.Empty
             };
 
-
-            IdentityResult result = await _userManager.CreateAsync(employee, user.Password);
-            if (result.Succeeded)
+            try
             {
-                await _userManager.AddToRoleAsync(employee, "Employee");
-                return user;
+                Employee employee = new Employee()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    StartDate = DateTime.Now,
+                    MaritalStatus = user.MaritalStatus,
+                    DateCreated = DateTime.Now,
+                    DateModified = DateTime.Now,
+                    DateOfBirth = DateTime.Now,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    UserName = user.UserName,
+                    Gender = user.Gender,
+                    EmailConfirmed = true,
+                    PhoneNumberConfirmed = true,
+                    PhoneNumber = user.PhoneNumber,
+                    IsActive = true,
+                    TotalHolidayEntitlement = 100,
+                    ContractType = ContractType.FullTime
+                };
 
+
+                IdentityResult result = await _userManager.CreateAsync(employee, user.Password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(employee, "Employee");
+                    response.Data = user;
+                    return response;
+                }
+
+                string errors = string.Empty;
+                foreach (var error in result.Errors)
+                {
+                    errors += error.Description + Environment.NewLine;
+                }
+
+                response.StatusCode = 500;
+                response.Message = errors;
+                return response;
             }
-
-            string errors = string.Empty;
-            foreach (var error in result.Errors)
+            catch (Exception ex)
             {
-                errors += error.Description + Environment.NewLine;
-            }
-
-            throw new MissingFieldException(errors);
-        }
-
-        public async Task<List<EmployeeDto>> GetAllEmployeesAsync()
-        {
-            var employees = await _userManager.Users.Select(x => new EmployeeDto
-            {
-                EmployeeId = x.Id,
-                StartDate = DateTime.Now,
-                MaritalStatus = x.MaritalStatus,
-                DateCreated = DateTime.Now,
-                DateModified = DateTime.Now,
-                DateOfBirth = DateTime.Now,
-                Email = x.Email,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                UserName = x.UserName,
-                Gender = x.Gender,
-                PhoneNumber = x.PhoneNumber,
-                TotalHolidayEntitlement = 100,
-                ContractType = ContractType.FullTime
-            }).ToListAsync();
-
-            if (employees != null)
-            {
-                return employees;
+                response.StatusCode = 500;
+                response.Message = $"{ex.Message}: \n {ex.StackTrace}";
+                return response;
             }
             
-            return new List<EmployeeDto>();
+        }
+
+        public async Task<Response<List<EmployeeDto>>> GetAllEmployeesAsync()
+        {
+            var response = new Response<List<EmployeeDto>>()
+            {
+                StatusCode = 200,
+                Data = new List<EmployeeDto>(),
+                Succeeded = false,
+                Errors = null,
+                Message = string.Empty
+            };
+
+            try
+            {
+                var employees = await _userManager.Users.Select(x => new EmployeeDto
+                {
+                    EmployeeId = x.Id,
+                    StartDate = DateTime.Now,
+                    MaritalStatus = x.MaritalStatus,
+                    DateCreated = DateTime.Now,
+                    DateModified = DateTime.Now,
+                    DateOfBirth = DateTime.Now,
+                    Email = x.Email,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    UserName = x.UserName,
+                    Gender = x.Gender,
+                    PhoneNumber = x.PhoneNumber,
+                    TotalHolidayEntitlement = 100,
+                    ContractType = ContractType.FullTime
+                }).ToListAsync();
+
+                if (employees != null)
+                {
+                    response.Data = employees;
+                    return response;
+                }
+
+                return new Response<List<EmployeeDto>>();
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = 500;
+                response.Message = $"{ex.Message}: \n {ex.StackTrace}";
+                return response;
+            }
         }
 
         public async Task<Response<EmployeeDto>> GetEmployeeByIdAsync(string employeeId)

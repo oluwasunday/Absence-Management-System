@@ -14,14 +14,15 @@ namespace AbsenceManagementSystem.Services.Services
             _employeeRepository = employeeRepository;
         }
 
-        public async Task<EmployeeDto> AddNewEmployeeAsync(EmployeeDto user)
+        public async Task<Response<EmployeeDto>> AddNewEmployeeAsync(EmployeeDto user)
         {
             return await _employeeRepository.AddNewEmployeeAsync(user);
         }
 
-        public async Task<List<EmployeeDto>> GetAllEmployeesAsync()
+        public async Task<Response<List<EmployeeDto>>> GetAllEmployeesAsync()
         {
-            return await _employeeRepository.GetAllEmployeesAsync();
+            var employees = await _employeeRepository.GetAllEmployeesAsync();
+            return employees;
         }
 
         public async Task<Response<EmployeeDto>> GetEmployeeByIdAsync(string employeeId)

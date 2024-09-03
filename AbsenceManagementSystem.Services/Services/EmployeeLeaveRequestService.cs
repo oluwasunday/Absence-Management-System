@@ -12,20 +12,43 @@ namespace AbsenceManagementSystem.Services.Services
     public class EmployeeLeaveRequestService : IEmployeeLeaveRequestService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmployeeService _employeeService;
 
-        public EmployeeLeaveRequestService(IUnitOfWork unitOfWork)
+        public EmployeeLeaveRequestService(IUnitOfWork unitOfWork, IEmployeeService employeeService)
         {
             _unitOfWork = unitOfWork;
+            _employeeService = employeeService;
         }
 
         public async Task<Response<EmployeeLeaveRequesResponsetDto>> AddNewLeaveRequestAsync(EmployeeLeaveRequestDto requestDto)
         {
             try
             {
+                var current = DateTime.Now;
+                var startDayIn = new DateTime(current.Year, 1, 1);
+
                 if (requestDto == null)
                 {
                     throw new ArgumentNullException();
                 }
+
+                //get employee
+                var employee = await _employeeService.GetEmployeeByIdAsync(requestDto.EmployeeId);
+                if (requestDto == null)
+                {
+                    return new Response<EmployeeLeaveRequesResponsetDto>()
+                    {
+                        Errors = $"Employee with name {requestDto.EmployeeName} not found",
+                        Data = null,
+                        StatusCode = StatusCodes.Status404NotFound,
+                        Succeeded = false
+                    };
+                }
+
+                // confirm eligibility
+                var employeeLeaveRequestsInCurrentyear = _unitOfWork.EmployeeLeaveRequests
+                                                        .GetAllAsQueryable()
+                                                        .Where(x => x.Id == requestDto.EmployeeId && x.StartDate >= startDayIn && x.EndDate <= current);
 
                 EmployeeLeaveRequest leaveRequest = new EmployeeLeaveRequest()
                 {
