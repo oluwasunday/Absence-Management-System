@@ -52,6 +52,7 @@ namespace AbsenceManagementSystemApi
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<ITokenRepository, TokenRepository>();
             builder.Services.AddScoped<ITokenGeneratorService, TokenGeneratorService>();
+            builder.Services.AddScoped<IAbsencePredictorService, AbsencePredictorService>();
 
             // configure mail service
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
