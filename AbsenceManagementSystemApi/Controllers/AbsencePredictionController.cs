@@ -19,8 +19,14 @@ namespace AbsenceManagementSystemApi.Controllers
         [HttpPost]
         public ActionResult<bool> Predict([FromBody] EmployeeLeaveRequest inputData)
         {
-            //_predictor.TrainModel2();
             var result = _predictor.PredictAbsenceMain(inputData);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<EmployeeLeavePredictResponse>>> PredictAbsences()
+        {
+            var result = await _predictor.PredictAbsences();
             return Ok(result);
         }
     }

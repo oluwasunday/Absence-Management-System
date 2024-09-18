@@ -1,37 +1,41 @@
 ﻿using AbsenceManagementSystem.Core.Domain;
 using AbsenceManagementSystem.Core.DTO;
 using AbsenceManagementSystem.Core.Enums;
+using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
 using AbsenceManagementSystem.Core.UnitOfWork;
 using AbsenceManagementSystem.Infrastructure.DbContext;
 using CsvHelper;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace AbsenceManagementSystem.Services.Services
 {
     public class AbsencePredictorService : IAbsencePredictorService
     {
-        //private readonly string _modelPath = "C:\\Users\\SundayOladejo\\Documents\\absence mgt\\ml-model\\model.zip";
-        //private readonly string _modelPath = "C:\\Users\\SundayOladejo\\Documents\\absence mgt\\ml-model";
-        private string _modelPath = "C:\\Users\\SundayOladejo\\Documents\\Portfolio\\AbsenceManagementSystemApi - Copy\\AbsenceManagementSystemApi\\";
+        //private string _modelPath = "C:\\Users\\SundayOladejo\\Documents\\Portfolio\\AbsenceManagementSystemApi - Copy\\AbsenceManagementSystemApi\\";
+        private string _modelPath = "";
         private readonly MLContext _mlContext;
         private readonly IUnitOfWork _unitOfWork;
         private ITransformer _model;
         private ITransformer _loadedModel;
         private readonly IWebHostEnvironment _webEnv;
+        private readonly IEmployeeRepository _empRepo;
 
-        public AbsencePredictorService(IUnitOfWork unitOfWork, IWebHostEnvironment webEnv)
+        public AbsencePredictorService(IUnitOfWork unitOfWork, IWebHostEnvironment webEnv, IEmployeeRepository employeeRepository)
         {
             _unitOfWork = unitOfWork;
             _mlContext = new MLContext();
             //_loadedModel = LoadModel2();
             _webEnv = webEnv;
             TrainModelMain();
+            _empRepo = employeeRepository;
         }
 
         public void TrainModelMain()
@@ -84,24 +88,7 @@ namespace AbsenceManagementSystem.Services.Services
         {
             LoadModelMain();
 
-            float season = 0;
-
-            if(inputData.StartDate.Month >= 3 && inputData.StartDate.Month <= 5)
-            {
-                season = (int)Season.Spring;
-            }
-            else if(inputData.StartDate.Month >= 6 && inputData.StartDate.Month <= 8)
-            {
-                season = (int)Season.Summer;
-            }
-            else if(inputData.StartDate.Month >= 9 && inputData.StartDate.Month <= 11)
-            {
-                season = (int)Season.Autumn;
-            }
-            else if(inputData.StartDate.Month == 12 || inputData.StartDate.Month == 1 || inputData.StartDate.Month == 2)
-            {
-                season = (int)Season.Winter;
-            }
+            float season = GetSeason(inputData.StartDate, inputData.EndDate);
 
             var predictionInputData = new EmployeeLeaveRequestPredict
             {
@@ -118,6 +105,62 @@ namespace AbsenceManagementSystem.Services.Services
             return prediction.WillBeAbsent;
         }
 
+        public async Task<List<EmployeeLeavePredictResponse>> PredictAbsences()
+        {
+            LoadModelMain();
+            var now = DateTime.Now;
+
+            var response = new List<EmployeeLeavePredictResponse>();
+            var count = 0;
+
+            var employeesRequests = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().ToList();
+            var employees = (await _empRepo.GetAllEmployeesAsync()).Data;
+
+            // Prepare a list of input data for batch prediction
+            var predictionInputDataList = new List<EmployeeLeaveRequestPredict>();
+
+            //float season = GetSeason(inputData.StartDate, inputData.EndDate);
+
+            foreach (var req in employeesRequests)
+            {
+                float season = GetSeason(req.StartDate, req.EndDate);
+                var empl = employees.FirstOrDefault(x => x.EmployeeId == req.EmployeeId);
+
+                var empLeaveRecord = employeesRequests.Where(x => x.EmployeeId == empl.EmployeeId).Sum(x => x.NumberOfDaysOff);
+
+                var predictionInputData = new EmployeeLeaveRequestPredict
+                {
+                    Age = (float)Math.Round((float)(empl.DateOfBirth - now).TotalDays, 1),
+                    NumberOfDaysOff = (float)Math.Round((float)(req.EndDate - req.StartDate).Days, 1),
+                    EmploymentDuration = (float)Math.Round((float)(empl.DateCreated - now).TotalDays, 1),
+                    TotalLeaveDaysRemaining = empl.TotalHolidayEntitlement - empLeaveRecord,
+                    LeaveType = (float)req.LeaveType,
+                    Season = season
+                };
+                predictionInputDataList.Add(predictionInputData);
+
+                var predictionEngine = _mlContext.Model.CreatePredictionEngine<EmployeeLeaveRequestPredict, AbsencePredictionDto>(_model);
+                var prediction = predictionEngine.Predict(predictionInputData);
+                if (prediction.WillBeAbsent)
+                {
+                    response.Add(new EmployeeLeavePredictResponse
+                    {
+                        EmployeeName = empl.FirstName + " " + empl.LastName,
+                        LeaveType = 0,
+                        Status = true
+                    });
+                    count++;
+                }
+
+                if (count == 5) break;
+            }
+
+            Console.WriteLine("Predictions complete.");
+            Debug.WriteLine("Predictions complete.");
+
+            return response;
+        }
+
         private void LoadModelMain()
         {
             using (var stream = new FileStream(_modelPath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -126,6 +169,94 @@ namespace AbsenceManagementSystem.Services.Services
             }
         }
 
+        public async Task PredictAbsencesBatch(EmployeeLeaveRequest inputData)
+        {
+            // Load the pre-trained model
+            LoadModelMain();
+
+            var now = DateTime.Now;
+
+            // Get all employees and leave requests from the database
+            var employeesRequests = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().ToList();
+            var employees = (await _empRepo.GetAllEmployeesAsync()).Data;
+
+            // Prepare a list of input data for batch prediction
+            var predictionInputDataList = new List<EmployeeLeaveRequestPredict>();
+
+            foreach (var req in employeesRequests)
+            {
+                float season = GetSeason(inputData.StartDate, inputData.EndDate);
+                var empl = employees.FirstOrDefault(x => x.EmployeeId == req.EmployeeId);
+
+                var empLeaveRecord = employeesRequests.Where(x => x.EmployeeId == empl.EmployeeId).Sum(x => x.NumberOfDaysOff);
+
+                var predictionInputData = new EmployeeLeaveRequestPredict
+                {
+                    Age = (float)(now - empl.DateOfBirth).TotalDays,
+                    NumberOfDaysOff = (inputData.StartDate - inputData.EndDate).Days,
+                    EmploymentDuration = (float)(now - empl.DateCreated).TotalDays,
+                    TotalLeaveDaysRemaining = empl.TotalHolidayEntitlement - empLeaveRecord,
+                    LeaveType = (float)req.LeaveType,
+                    Season = season
+                };
+                predictionInputDataList.Add(predictionInputData);
+            }
+
+            // Load the input data into an IDataView for batch processing
+            IDataView batchData = _mlContext.Data.LoadFromEnumerable(predictionInputDataList);
+
+            // Perform batch prediction using the loaded model
+            IDataView predictions = _model.Transform(batchData);
+
+            // Extract predictions from the IDataView
+            var predictedResults = _mlContext.Data.CreateEnumerable<AbsencePredictionDto>(predictions, reuseRowObject: false).ToList();
+
+            var response = new List<EmployeeLeavePredictResponse>();
+            int count = 0;
+
+            // Iterate through each prediction and add to the response
+            foreach (var prediction in predictedResults)
+            {
+                /*if (prediction.WillBeAbsent)
+                {
+                    response.Add(new EmployeeLeavePredictResponse
+                    {
+                        EmployeeName = employees[count].EmployeeName,
+                        LeaveType = employees[count].LeaveType,
+                        Status = prediction.WillBeAbsent
+                    });
+                }*/
+
+                count++;
+                if (count == 5) break; // Limit the response to 5 predictions if necessary
+            }
+
+            // At this point, you have a batch prediction for all employees
+            Console.WriteLine("Batch predictions complete.");
+            Debug.WriteLine("Batch predictions complete.");
+        }
+
+        private float GetSeason(DateTime startDate, DateTime endDate)
+        {
+            float season = 0;
+            if (startDate.Month >= 3 && startDate.Month <= 5)
+            {
+                season = (int)Season.Spring;
+            }
+            else if (startDate.Month >= 6 && startDate.Month <= 8)
+            {
+                season = (int)Season.Summer;
+            }
+            else if (startDate.Month >= 9 && startDate.Month <= 11)
+            {
+                season = (int)Season.Autumn;
+            }
+            else if (startDate.Month == 12 || startDate.Month == 1 || startDate.Month == 2)
+            {
+                season = (int)Season.Winter;
+            }
+            return season;
+        }
 
 
 
@@ -140,15 +271,14 @@ namespace AbsenceManagementSystem.Services.Services
 
 
 
-
-        public bool PredictAbsence(EmployeeLeaveRequest inputData)
+        /*public bool PredictAbsence(EmployeeLeaveRequest inputData)
         {
             var predictionEngine = _mlContext.Model.CreatePredictionEngine<EmployeeLeaveRequest, AbsencePredictionDto>(_model);
             var prediction = predictionEngine.Predict(inputData);
             return prediction.WillBeAbsent;
-        }
+        }*/
 
-        public double CalculateBradfordFactor(int absenceInstances, int totalDays)
+        /*public double CalculateBradfordFactor(int absenceInstances, int totalDays)
         {
             // Bradford Factor formula: B = S^2 * D (S = absence instances, D = total days absent)
             return absenceInstances * absenceInstances * totalDays;
@@ -164,7 +294,7 @@ namespace AbsenceManagementSystem.Services.Services
                 return (int)((daysWorked / totalYearDays) * fullEntitlement);
             }
             return fullEntitlement;
-        }
+        }*/
     }
 
     public class EmployeeLeaveData
@@ -186,4 +316,6 @@ namespace AbsenceManagementSystem.Services.Services
         [LoadColumn(7)]
         public string Status { get; set; }
     }
+
+    
 }

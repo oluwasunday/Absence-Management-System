@@ -28,4 +28,11 @@ namespace AbsenceManagementSystem.Core.Domain
         public float EmploymentDuration { get; set; }
         public string Status { get; set; }
     }
+
+    public class EmployeeLeavePredictResponse
+    {
+        public float LeaveType { get; set; }
+        public string EmployeeName { get; set; }
+        public bool Status { get; set; }
+    }
 }
