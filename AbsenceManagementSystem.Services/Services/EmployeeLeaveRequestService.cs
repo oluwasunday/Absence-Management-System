@@ -32,8 +32,6 @@ namespace AbsenceManagementSystem.Services.Services
                     throw new ArgumentNullException();
                 }
 
-                //get employee
-                var employee = await _employeeService.GetEmployeeByIdAsync(requestDto.EmployeeId);
                 if (requestDto == null)
                 {
                     return new Response<EmployeeLeaveRequesResponsetDto>()
@@ -41,6 +39,42 @@ namespace AbsenceManagementSystem.Services.Services
                         Errors = $"Employee with name {requestDto.EmployeeName} not found",
                         Data = null,
                         StatusCode = StatusCodes.Status404NotFound,
+                        Succeeded = false
+                    };
+                }
+
+                if((requestDto.StartDate - requestDto.StartDate).TotalDays != requestDto.NumberOfDaysOff)
+                {
+                    return new Response<EmployeeLeaveRequesResponsetDto>()
+                    {
+                        Errors = $"Leave date range and number of days off not match",
+                        Data = null,
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        Succeeded = false
+                    };
+                }
+
+                //get employee
+                var employee = await _employeeService.GetEmployeeByIdAsync(requestDto.EmployeeId);
+
+                if(employee == null)
+                {
+                    return new Response<EmployeeLeaveRequesResponsetDto>()
+                    {
+                        Errors = $"Employee record not found",
+                        Data = null,
+                        StatusCode = StatusCodes.Status404NotFound,
+                        Succeeded = false
+                    };
+                }
+
+                if(employee.Data.TotalHolidayEntitlement - requestDto.NumberOfDaysOff < 0)
+                {
+                    return new Response<EmployeeLeaveRequesResponsetDto>()
+                    {
+                        Errors = $"Insufficient leave balance",
+                        Data = null,
+                        StatusCode = StatusCodes.Status400BadRequest,
                         Succeeded = false
                     };
                 }
@@ -68,6 +102,14 @@ namespace AbsenceManagementSystem.Services.Services
 
 
                 await _unitOfWork.EmployeeLeaveRequests.AddAsync(leaveRequest);
+
+                //update employee
+                var updateEmployeeResponse = await _employeeService.UpdateEmployeeTotalLeave(requestDto.EmployeeId, requestDto.NumberOfDaysOff);
+                if (updateEmployeeResponse)
+                {
+                    //
+                }
+
                 await _unitOfWork.CompleteAsync();
 
                 var leaveRequestResponse = new EmployeeLeaveRequesResponsetDto()

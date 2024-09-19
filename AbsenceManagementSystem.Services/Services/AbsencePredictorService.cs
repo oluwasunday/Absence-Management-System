@@ -19,7 +19,6 @@ namespace AbsenceManagementSystem.Services.Services
 {
     public class AbsencePredictorService : IAbsencePredictorService
     {
-        //private string _modelPath = "C:\\Users\\SundayOladejo\\Documents\\Portfolio\\AbsenceManagementSystemApi - Copy\\AbsenceManagementSystemApi\\";
         private string _modelPath = "";
         private readonly MLContext _mlContext;
         private readonly IUnitOfWork _unitOfWork;
@@ -32,7 +31,6 @@ namespace AbsenceManagementSystem.Services.Services
         {
             _unitOfWork = unitOfWork;
             _mlContext = new MLContext();
-            //_loadedModel = LoadModel2();
             _webEnv = webEnv;
             TrainModelMain();
             _empRepo = employeeRepository;

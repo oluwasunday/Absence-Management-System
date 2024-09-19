@@ -3,6 +3,7 @@ using AbsenceManagementSystem.Core.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AbsenceManagementSystemApi.Controllers
 {
@@ -62,7 +63,17 @@ namespace AbsenceManagementSystemApi.Controllers
         [HttpDelete("")]
         public async Task<IActionResult> DeleteEmployee(string employeeId)
         {
+            string userId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
             var result = await _employeeService.DeleteEmployeeAsync(employeeId);
+            return Ok(result);
+        }
+
+        // GET: EmployeesleaveDashboard
+        [HttpGet("employeedashboard")]
+        public async Task<IActionResult> EmployeeInfoForDashboard()
+        {
+            string employeeId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var result = await _employeeService.EmployeeInfoForDashboard(employeeId);
             return Ok(result);
         }
     }

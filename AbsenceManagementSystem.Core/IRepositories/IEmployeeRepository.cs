@@ -11,5 +11,6 @@ namespace AbsenceManagementSystem.Core.IRepositories
         Task<Response<EmployeeDto>> GetEmployeeByIdAsync(string employeeId);
         Task<Response<bool>> EditEmployeeByIdAsync(EmployeeDto employeeDto);
         Task<Response<bool>> DeleteEmployeeAsync(string employeeId);
+        Task<bool> UpdateEmployeeTotalLeave(string employeeId, int leaveDaysToUpdate);
     }
 }

@@ -63,4 +63,10 @@ namespace AbsenceManagementSystem.Core.DTO
         public string Id { get; set; }
         public LeaveStatus Status { get; set; }
     }
+
+    public class EmployeeDashboardDto
+    {
+        public int TotalLeaveRemaining { get; set; }
+        public List<EmployeeLeaveRequesResponsetDto> LeaveRecords { get; set; }
+    }
 }
