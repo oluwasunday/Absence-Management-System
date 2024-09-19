@@ -41,11 +41,32 @@ namespace AbsenceManagementSystem.Core.DTO
         public int NumberOfDaysOff { get; set; }
         public LeaveTypes LeaveType { get; set; }
         public LeaveStatus Status { get; set; }
+        public bool WillBeAbsent { get; set; }
+    }
+
+    public class EmployeeLeaveRequesResponsetDto2
+    {
+        public string Id { get; set; }
+        public string EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public DateTime RequestDate { get; set; }
+        public int NumberOfDaysOff { get; set; }
+        public string LeaveType { get; set; }
+        public string Status { get; set; }
+        public bool WillBeAbsent { get; set; }
     }
 
     public class UpdateEmployeeLeaveRequesDto
     {
         public string Id { get; set; }
         public LeaveStatus Status { get; set; }
+    }
+
+    public class EmployeeDashboardDto
+    {
+        public int TotalLeaveRemaining { get; set; }
+        public List<EmployeeLeaveRequesResponsetDto> LeaveRecords { get; set; }
     }
 }

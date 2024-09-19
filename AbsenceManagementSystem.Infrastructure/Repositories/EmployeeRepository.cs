@@ -150,19 +150,19 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                     .Select(x => new EmployeeDto
                     {
                         EmployeeId = x.Id,
-                        StartDate = DateTime.Now,
+                        StartDate = x.StartDate,
                         MaritalStatus = x.MaritalStatus,
-                        DateCreated = DateTime.Now,
-                        DateModified = DateTime.Now,
-                        DateOfBirth = DateTime.Now,
+                        DateCreated = x.DateCreated,
+                        DateModified = x.DateModified,
+                        DateOfBirth = x.DateOfBirth,
                         Email = x.Email,
                         FirstName = x.FirstName,
                         LastName = x.LastName,
                         UserName = x.UserName,
                         Gender = x.Gender,
                         PhoneNumber = x.PhoneNumber,
-                        TotalHolidayEntitlement = 100,
-                        ContractType = ContractType.FullTime
+                        TotalHolidayEntitlement = x.TotalHolidayEntitlement,
+                        ContractType = x.ContractType
                     }).FirstOrDefaultAsync();
 
                 if (employee != null)
@@ -262,6 +262,28 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                 response.Message = $"{ex.Message}: \n {ex.StackTrace}";
                 response.Succeeded = false;
                 return response;
+            }
+        }
+
+        public async Task<bool> UpdateEmployeeTotalLeave(string employeeId, int leaveDaysToUpdate)
+        {   
+            try
+            {
+                var employee = await _userManager.Users.Where(x => x.Id == employeeId && x.IsActive).FirstOrDefaultAsync();
+
+                employee.TotalHolidayEntitlement = employee.TotalHolidayEntitlement - leaveDaysToUpdate;
+                var res = await _userManager.UpdateAsync(employee);
+
+                if(res.Succeeded)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception();
             }
         }
     }
