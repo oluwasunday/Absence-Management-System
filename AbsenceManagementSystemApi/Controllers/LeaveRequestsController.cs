@@ -97,5 +97,13 @@ namespace AbsenceManagementSystemApi.Controllers
                 return BadRequest();
             }
         }
+
+        // GET: PendingLeaveRequestsController
+        [HttpGet("allpendingrequests")]
+        public async Task<IActionResult> GetAllPendingRequest()
+        {
+            var result = await _leaveRequestService.GetAllPendingLeaveRequestsAsync();
+            return Ok(result);
+        }
     }
 }

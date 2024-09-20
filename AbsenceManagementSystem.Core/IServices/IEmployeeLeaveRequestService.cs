@@ -12,5 +12,6 @@ namespace AbsenceManagementSystem.Core.IServices
         Task<Response<bool>> UpdateLeaveRequestStatusAsync(LeaveStatus status, string id);
         Task<Response<bool>> EditLeaveRequestStatusAsync(EmployeeLeaveRequestDto requestDto);
         Task<Response<bool>> DeleteLeaveRequestStatusAsync(string requestId);
+        Task<Response<List<EmployeeLeaveRequesResponsetDto>>> GetAllPendingLeaveRequestsAsync();
     }
 }

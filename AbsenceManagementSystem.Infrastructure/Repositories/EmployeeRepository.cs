@@ -54,7 +54,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                     PhoneNumberConfirmed = true,
                     PhoneNumber = user.PhoneNumber,
                     IsActive = true,
-                    TotalHolidayEntitlement = 100,
+                    TotalHolidayEntitlement = 20,
                     ContractType = ContractType.FullTime
                 };
 
