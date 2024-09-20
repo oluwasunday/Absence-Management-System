@@ -122,16 +122,18 @@ namespace AbsenceManagementSystem.Services.Services
             foreach (var req in employeesRequests)
             {
                 float season = GetSeason(req.StartDate, req.EndDate);
-                var empl = employees.FirstOrDefault(x => x.EmployeeId == req.EmployeeId);
+                var empl = employees?.FirstOrDefault(x => x.EmployeeId == req.EmployeeId);
+                if (empl == null)
+                    continue;
 
-                var empLeaveRecord = employeesRequests.Where(x => x.EmployeeId == empl.EmployeeId).Sum(x => x.NumberOfDaysOff);
+                var empLeaveRecord = employeesRequests.Where(x => x.EmployeeId == empl?.EmployeeId)?.Sum(x => x.NumberOfDaysOff) ?? 0;
 
                 var predictionInputData = new EmployeeLeaveRequestPredict
                 {
                     Age = (float)Math.Round((float)(empl.DateOfBirth - now).TotalDays, 1),
                     NumberOfDaysOff = (float)Math.Round((float)(req.EndDate - req.StartDate).Days, 1),
                     EmploymentDuration = (float)Math.Round((float)(empl.DateCreated - now).TotalDays, 1),
-                    TotalLeaveDaysRemaining = empl.TotalHolidayEntitlement - empLeaveRecord,
+                    TotalLeaveDaysRemaining = empl?.TotalHolidayEntitlement ?? 0 - empLeaveRecord,
                     LeaveType = (float)req.LeaveType,
                     Season = season
                 };

@@ -43,7 +43,8 @@ namespace AbsenceManagementSystem.Services.Services
                     };
                 }
 
-                if((requestDto.StartDate - requestDto.StartDate).TotalDays != requestDto.NumberOfDaysOff)
+                var dateDiff = (requestDto.EndDate - requestDto.StartDate).TotalDays;
+                if (dateDiff != requestDto.NumberOfDaysOff)
                 {
                     return new Response<EmployeeLeaveRequesResponsetDto>()
                     {
@@ -340,6 +341,45 @@ namespace AbsenceManagementSystem.Services.Services
                     StatusCode = StatusCodes.Status500InternalServerError,
                     Succeeded = false,
                     Data = false,
+                    Message = $"{ex.Message} - {ex.StackTrace}"
+                };
+            }
+        }
+
+        public async Task<Response<List<EmployeeLeaveRequesResponsetDto>>> GetAllPendingLeaveRequestsAsync()
+        {
+            try
+            {
+                var leaveRequests = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && !x.IsDeleted && x.Status == LeaveStatus.Pending)
+                    .Select(x => new EmployeeLeaveRequesResponsetDto()
+                    {
+                        Id = x.Id,
+                        StartDate = x.StartDate,
+                        RequestDate = x.DateCreated,
+                        EmployeeName = x.EmployeeName,
+                        EmployeeId = x.EmployeeId,
+                        EndDate = x.EndDate,
+                        NumberOfDaysOff = x.NumberOfDaysOff,
+                        LeaveType = x.LeaveType,
+                        Status = x.Status
+                    }
+                ).ToListAsync();
+
+                return new Response<List<EmployeeLeaveRequesResponsetDto>>()
+                {
+                    StatusCode = StatusCodes.Status200OK,
+                    Succeeded = true,
+                    Data = leaveRequests,
+                    Message = $"Success!"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<EmployeeLeaveRequesResponsetDto>>()
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Succeeded = false,
+                    Data = null,
                     Message = $"{ex.Message} - {ex.StackTrace}"
                 };
             }
