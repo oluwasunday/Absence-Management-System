@@ -76,5 +76,14 @@ namespace AbsenceManagementSystemApi.Controllers
             var result = await _employeeService.EmployeeInfoForDashboard(employeeId);
             return Ok(result);
         }
+
+        // GET: EmployeesleaveDashboard
+        [HttpGet("employeeleaveentitlement")]
+        public async Task<IActionResult> EmployeeLeaveEntitlement()
+        {
+            string employeeId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var result = await _employeeService.EmployeeLeaveEntitlement(employeeId);
+            return Ok(result);
+        }
     }
 }

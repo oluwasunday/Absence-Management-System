@@ -190,6 +190,7 @@ namespace AbsenceManagementSystem.Services.Services
             try
             {
                 var leaveRequests = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.EmployeeId == employeeId && x.IsActive && !x.IsDeleted)
+                    .OrderByDescending(x => x.DateCreated)
                     .Select(x => new EmployeeLeaveRequesResponsetDto()
                     {
                         Id = x.Id,
