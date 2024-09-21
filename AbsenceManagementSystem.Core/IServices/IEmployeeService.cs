@@ -12,5 +12,6 @@ namespace AbsenceManagementSystem.Core.IServices
         Task<Response<bool>> DeleteEmployeeAsync(string employeeId);
         Task<Response<EmployeeDashboardDto>> EmployeeInfoForDashboard(string employeeId);
         Task<bool> UpdateEmployeeTotalLeave(string employeeId, int leaveDays);
+        Task<Response<LeaveEntitlementDto>> EmployeeLeaveEntitlement(string employeeId);
     }
 }

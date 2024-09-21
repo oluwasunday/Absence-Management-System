@@ -1,4 +1,5 @@
 ﻿using AbsenceManagementSystem.Core.DTO;
+using AbsenceManagementSystem.Core.Enums;
 using AbsenceManagementSystem.Core.Handlers;
 using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
@@ -57,7 +58,8 @@ namespace AbsenceManagementSystem.Services.Services
                 // get employee info
                 var employeeInfo = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
                 // get employee info
-                var employeeLeaveInfo = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable()
+                var employeeLeaveInfo = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable();
+                var employeeLeaveDetails = employeeLeaveInfo
                     .Where(x => x.EmployeeId == employeeId)
                     .Select(x => new EmployeeLeaveRequesResponsetDto
                     {
@@ -74,11 +76,12 @@ namespace AbsenceManagementSystem.Services.Services
                     .ToList();
 
                 var totalLeaveEntitled = employeeInfo?.Data?.TotalHolidayEntitlement ?? 0;
+                var totalRemaining = totalLeaveEntitled - employeeLeaveInfo.Where(x => x.IsDeleted == false && x.Status != LeaveStatus.Cancelled && x.Status != LeaveStatus.Rejected).Sum(x => x.NumberOfDaysOff);
 
                 var result = new EmployeeDashboardDto
                 {
-                    TotalLeaveRemaining = totalLeaveEntitled,
-                    LeaveRecords = employeeLeaveInfo
+                    TotalLeaveRemaining = totalRemaining,
+                    LeaveRecords = employeeLeaveDetails
                 };
 
                 response.Data = result;
@@ -87,6 +90,47 @@ namespace AbsenceManagementSystem.Services.Services
             catch (Exception ex)
             {
                 return new Response<EmployeeDashboardDto> { StatusCode = 500, Data = null, Errors = ex.Message, Succeeded = false };
+            }
+            
+        }
+
+        public async Task<Response<LeaveEntitlementDto>> EmployeeLeaveEntitlement(string employeeId)
+        {
+            try
+            {
+                var response = new Response<LeaveEntitlementDto>()
+                {
+                    StatusCode = 200,
+                    Succeeded = true
+                };
+
+                // get employee info
+                var employeeInfo = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
+                // get employee info
+                var employeeLeaveInfo = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable()
+                    .Where(x => x.EmployeeId == employeeId && x.IsDeleted == false && x.Status != LeaveStatus.Cancelled && x.Status != LeaveStatus.Rejected);
+
+                var leaveTaken = employeeLeaveInfo.Where(x => x.Status == LeaveStatus.Approved).Sum(x => x.NumberOfDaysOff);
+                var totaleLeaveEntitledTo = employeeInfo.Data.TotalHolidayEntitlement;
+                var totalPending = employeeLeaveInfo.Where(x => x.Status == LeaveStatus.Pending).Sum(x => x.NumberOfDaysOff);
+                var balance = totaleLeaveEntitledTo - leaveTaken - totalPending;
+
+                var leaveEntitlementDto = new LeaveEntitlementDto
+                {
+                    EmployeeName = employeeInfo.Data.FirstName + " " + employeeInfo.Data.LastName,
+                    ContractType = employeeInfo.Data.ContractType.ToString(),
+                    LeaveBalance = balance,
+                    TotalLeaveEntitled = totaleLeaveEntitledTo,
+                    TotalLeavePending = totalPending,
+                    TotalLeaveTaken = leaveTaken
+                };
+
+                response.Data = leaveEntitlementDto;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<LeaveEntitlementDto> { StatusCode = 500, Data = null, Errors = ex.Message, Succeeded = false };
             }
             
         }
