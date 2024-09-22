@@ -102,20 +102,28 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                 var employees = await _userManager.Users.Select(x => new EmployeeDto
                 {
                     EmployeeId = x.Id,
-                    StartDate = DateTime.Now,
+                    StartDate = x.StartDate,
                     MaritalStatus = x.MaritalStatus,
-                    DateCreated = DateTime.Now,
-                    DateModified = DateTime.Now,
-                    DateOfBirth = DateTime.Now,
+                    DateCreated = x.DateCreated,
+                    DateOfBirth = x.DateOfBirth,
                     Email = x.Email,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
                     UserName = x.UserName,
                     Gender = x.Gender,
                     PhoneNumber = x.PhoneNumber,
-                    TotalHolidayEntitlement = 100,
-                    ContractType = ContractType.FullTime
+                    TotalHolidayEntitlement = x.TotalHolidayEntitlement,
+                    ContractType = x.ContractType
                 }).ToListAsync();
+
+                foreach (var item in employees)
+                {
+                    var leaveTaken = _dbContext.EmployeeLeaveRequests
+                        .Where(x => x.EmployeeId == item.EmployeeId && x.Status != LeaveStatus.Rejected && x.Status != LeaveStatus.Cancelled)
+                        .ToList();
+                    item.NumberOfDaysTaken = leaveTaken.Sum(x => x.NumberOfDaysOff);
+                    item.LeaveBalance = item.TotalHolidayEntitlement - item.NumberOfDaysTaken;
+                }
 
                 if (employees != null)
                 {
