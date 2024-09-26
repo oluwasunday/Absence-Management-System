@@ -35,7 +35,8 @@ namespace AbsenceManagementSystem.Services.Services
         {
             try
             {
-                Configuration.Default.ApiKey.Add("api-key", _emailSettings.ApiKey);
+                //Configuration.Default.ApiKey.Add("api-key", _emailSettings.ApiKey);
+                Configuration.Default.ApiKey.Add("api-key", "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");
 
                 var apiInstance = new TransactionalEmailsApi();
                 string SenderName = _emailSettings.DisplayName;
@@ -55,7 +56,7 @@ namespace AbsenceManagementSystem.Services.Services
                 Cc.Add(CcData);
 
 
-                string HtmlContent = $"<html><body><h1>This is my first transactional email for Absence Management System</h1></body></html>";
+                string HtmlContent = mailRequest.Body;// $"<html><body><h1>This is my first transactional email for Absence Management System</h1></body></html>";
                 string TextContent = mailRequest.Body;
                 string Subject = mailRequest.Subject;
                 //string ReplyToName = "John Doe";

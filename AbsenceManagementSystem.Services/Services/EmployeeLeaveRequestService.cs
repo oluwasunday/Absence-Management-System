@@ -5,6 +5,7 @@ using AbsenceManagementSystem.Core.Handlers;
 using AbsenceManagementSystem.Core.IServices;
 using AbsenceManagementSystem.Core.UnitOfWork;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AbsenceManagementSystem.Services.Services
@@ -13,11 +14,13 @@ namespace AbsenceManagementSystem.Services.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmployeeService _employeeService;
+        private readonly IEmailService _emailService;
 
-        public EmployeeLeaveRequestService(IUnitOfWork unitOfWork, IEmployeeService employeeService)
+        public EmployeeLeaveRequestService(IUnitOfWork unitOfWork, IEmployeeService employeeService, IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
             _employeeService = employeeService;
+            _emailService = emailService;
         }
 
         public async Task<Response<EmployeeLeaveRequesResponsetDto>> AddNewLeaveRequestAsync(EmployeeLeaveRequestDto requestDto)
@@ -236,6 +239,22 @@ namespace AbsenceManagementSystem.Services.Services
 
                 _unitOfWork.EmployeeLeaveRequests.Update(leaveRequest);
                 await _unitOfWork.CompleteAsync();
+
+                {
+                    var employeeData = await _employeeService.GetEmployeeByIdAsync(id);
+                    // send mail
+                    var mailPayload = new EmailRequestDto
+                    {
+                        Subject = $"Leave Request {status.ToString()}",
+                        Body = $@"Hi {leaveRequest.EmployeeName}! <br><br>Your leave request with start date: {leaveRequest.StartDate} and end date: {leaveRequest.EndDate} has beed {status.ToString()}.<br><br>Regards.",
+                        CcEmail = employeeData.Data.Email,
+                        CcName = employeeData.Data.LastName,
+                        ToEmail = employeeData.Data.Email,
+                        ToName = employeeData.Data.FirstName
+                    };
+
+                    var sendMail = await _emailService.SendEmailAsync(mailPayload);
+                }
 
                 return new Response<bool>()
                 {

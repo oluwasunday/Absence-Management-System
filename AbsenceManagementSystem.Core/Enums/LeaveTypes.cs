@@ -9,4 +9,8 @@
         Maternity,
         Paternity
     }
+    public enum LeaveEntitlement
+    {
+        TotalHolidayEntitlement = 20
+    }
 }
