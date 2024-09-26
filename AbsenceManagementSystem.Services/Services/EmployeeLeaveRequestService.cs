@@ -86,7 +86,19 @@ namespace AbsenceManagementSystem.Services.Services
                 // confirm eligibility
                 var employeeLeaveRequestsInCurrentyear = _unitOfWork.EmployeeLeaveRequests
                                                         .GetAllAsQueryable()
-                                                        .Where(x => x.Id == requestDto.EmployeeId && x.StartDate >= startDayIn && x.EndDate <= current);
+                                                        .Where(x => x.Id == requestDto.EmployeeId && x.StartDate >= startDayIn && x.EndDate <= current
+                                                        && x.Status == LeaveStatus.Approved).ToList();
+
+                if(employeeLeaveRequestsInCurrentyear.Sum(x => x.NumberOfDaysOff) >= 20)
+                {
+                    return new Response<EmployeeLeaveRequesResponsetDto>()
+                    {
+                        Errors = $"Insufficient leave balance",
+                        Data = null,
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        Succeeded = false
+                    };
+                }
 
                 EmployeeLeaveRequest leaveRequest = new EmployeeLeaveRequest()
                 {
@@ -111,30 +123,36 @@ namespace AbsenceManagementSystem.Services.Services
                 var updateEmployeeResponse = await _employeeService.UpdateEmployeeTotalLeave(requestDto.EmployeeId, requestDto.NumberOfDaysOff);
                 if (updateEmployeeResponse)
                 {
-                    //
+                    await _unitOfWork.CompleteAsync();
+
+                    var leaveRequestResponse = new EmployeeLeaveRequesResponsetDto()
+                    {
+                        Id = leaveRequest.Id,
+                        StartDate = leaveRequest.StartDate,
+                        EndDate = leaveRequest.EndDate,
+                        NumberOfDaysOff = leaveRequest.NumberOfDaysOff,
+                        Status = leaveRequest.Status,
+                        RequestDate = leaveRequest.DateCreated,
+                        EmployeeId = leaveRequest.EmployeeId,
+                        EmployeeName = leaveRequest.EmployeeName,
+                        LeaveType = leaveRequest.LeaveType
+                    };
+
+                    return new Response<EmployeeLeaveRequesResponsetDto>()
+                    {
+                        StatusCode = StatusCodes.Status201Created,
+                        Succeeded = true,
+                        Data = leaveRequestResponse,
+                        Message = $"Successfully added"
+                    };
                 }
-
-                await _unitOfWork.CompleteAsync();
-
-                var leaveRequestResponse = new EmployeeLeaveRequesResponsetDto()
-                {
-                    Id = leaveRequest.Id,
-                    StartDate = leaveRequest.StartDate,
-                    EndDate = leaveRequest.EndDate,
-                    NumberOfDaysOff = leaveRequest.NumberOfDaysOff,
-                    Status = leaveRequest.Status,
-                    RequestDate = leaveRequest.DateCreated,
-                    EmployeeId = leaveRequest.EmployeeId,
-                    EmployeeName= leaveRequest.EmployeeName,
-                    LeaveType= leaveRequest.LeaveType
-                };
 
                 return new Response<EmployeeLeaveRequesResponsetDto>()
                 {
-                    StatusCode = StatusCodes.Status201Created,
-                    Succeeded = true,
-                    Data = leaveRequestResponse,
-                    Message = $"Successfully added"
+                    StatusCode = StatusCodes.Status500InternalServerError,
+                    Succeeded = false,
+                    Data = null,
+                    Message = "something went wrong"
                 };
             }
             catch (Exception ex)
@@ -147,6 +165,11 @@ namespace AbsenceManagementSystem.Services.Services
                     Message = $"{ex.Message} - {ex.StackTrace}"
                 };
             }
+        }
+
+        private bool CheckOverlappingDates(DateTime startDate1, DateTime endDate1, DateTime startDate2, DateTime endDate2)
+        {
+            return startDate1 <= endDate2 && startDate2 <= endDate1;
         }
 
         public async Task<Response<List<EmployeeLeaveRequesResponsetDto>>> GetAllLeaveRequestsAsync()

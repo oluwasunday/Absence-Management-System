@@ -179,7 +179,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
 
             try
             {
-                var employee = await _userManager.Users.Where(x => x.Id == employeeId && x.IsActive)
+                var employee = await _userManager.Users.Where(x => x.Id == employeeId && x.IsActive == true)
                     .Select(x => new EmployeeDto
                     {
                         EmployeeId = x.Id,
@@ -304,7 +304,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
             {
                 var employee = await _userManager.Users.Where(x => x.Id == employeeId && x.IsActive).FirstOrDefaultAsync();
 
-                employee.TotalHolidayEntitlement = employee.TotalHolidayEntitlement - leaveDaysToUpdate;
+                //employee.TotalHolidayEntitlement = employee.TotalHolidayEntitlement - leaveDaysToUpdate;
                 var res = await _userManager.UpdateAsync(employee);
 
                 if(res.Succeeded)
