@@ -14,10 +14,12 @@ namespace AbsenceManagementSystemApi.Controllers
     {
         private readonly IEmployeeService _employeeService;
         private string _userId;
+        private IConfiguration _configuration;
 
-        public EmployeesController(IEmployeeService employeeService)
+        public EmployeesController(IEmployeeService employeeService, IConfiguration configuration)
         {
-            _employeeService = employeeService;            
+            _employeeService = employeeService;
+            _configuration = configuration;
         }
 
         // GET: EmployeesController
@@ -91,6 +93,8 @@ namespace AbsenceManagementSystemApi.Controllers
         [HttpGet("employeesinfoforadmindashboard/counts")]
         public async Task<IActionResult> EmployeesInfoForAdminDashboard()
         {
+            //string apiKey = Environment.GetEnvironmentVariable("EMAIL_API_KEY");
+            
             _userId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
             var result = await _employeeService.EmployeesInfoForAdminDashboard(_userId);
             return Ok(result);
