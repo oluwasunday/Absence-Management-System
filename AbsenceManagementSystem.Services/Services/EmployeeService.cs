@@ -5,6 +5,7 @@ using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
 using AbsenceManagementSystem.Core.UnitOfWork;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 
 namespace AbsenceManagementSystem.Services.Services
 {
@@ -12,16 +13,38 @@ namespace AbsenceManagementSystem.Services.Services
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailService _emailService;
 
-        public EmployeeService(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
+        public EmployeeService(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, IEmailService emailService)
         {
             _employeeRepository = employeeRepository;
             _unitOfWork = unitOfWork;
+            _emailService = emailService;
         }
 
         public async Task<Response<EmployeeDto>> AddNewEmployeeAsync(EmployeeDto user)
         {
-            return await _employeeRepository.AddNewEmployeeAsync(user);
+            var result = await _employeeRepository.AddNewEmployeeAsync(user);
+
+            if (result.Succeeded)
+            {
+                // send mail
+                var mailPayload = new EmailRequestDto
+                {
+                    Subject = "Welcome Onbaord",
+                    Body = $@"Hi {result.Data.FirstName}! <br>You have been added to Absence Management System. Pls find your login details below:<br>
+                            Username: {result.Data.Email} <br>
+                            Password: {user.Password}",
+                    CcEmail = user.Email,
+                    CcName = user.LastName,
+                    ToEmail = user.Email,
+                    ToName = user.FirstName
+                };
+
+                var sendMail = await _emailService.SendEmailAsync(mailPayload);
+            }
+
+            return result;
         }
 
         public async Task<Response<List<EmployeeDto>>> GetAllEmployeesAsync()
@@ -76,7 +99,7 @@ namespace AbsenceManagementSystem.Services.Services
                     .ToList();
 
                 var totalLeaveEntitled = employeeInfo?.Data?.TotalHolidayEntitlement ?? 0;
-                var totalRemaining = totalLeaveEntitled - employeeLeaveInfo.Where(x => x.IsDeleted == false && x.Status != LeaveStatus.Cancelled && x.Status != LeaveStatus.Rejected).Sum(x => x.NumberOfDaysOff);
+                var totalRemaining = totalLeaveEntitled - employeeLeaveInfo.Where(x => x.EmployeeId == employeeId && x.IsDeleted == false && x.Status != LeaveStatus.Cancelled && x.Status != LeaveStatus.Rejected).Sum(x => x.NumberOfDaysOff);
 
                 var result = new EmployeeDashboardDto
                 {
@@ -90,6 +113,36 @@ namespace AbsenceManagementSystem.Services.Services
             catch (Exception ex)
             {
                 return new Response<EmployeeDashboardDto> { StatusCode = 500, Data = null, Errors = ex.Message, Succeeded = false };
+            }
+            
+        }
+
+        public async Task<Response<AdminDashboard>> EmployeesInfoForAdminDashboard(string userId)
+        {
+            try
+            {
+                var response = new Response<AdminDashboard>()
+                {
+                    StatusCode = 200, Succeeded = true
+                };
+
+                var employees = await _employeeRepository.GetAllEmployeesCountAsync();
+                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable();
+                var dashboard = new AdminDashboard
+                {
+                    UserId = userId,
+                    NumberOfEmployees = employees.Data,
+                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
+                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
+                    PendingLeave = leaves.Where(x => x.Status == LeaveStatus.Pending).Count()
+                };
+
+                response.Data = dashboard;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<AdminDashboard> { StatusCode = 500, Data = null, Errors = ex.Message, Succeeded = false };
             }
             
         }

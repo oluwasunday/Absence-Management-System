@@ -64,6 +64,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                 {
                     await _userManager.AddToRoleAsync(employee, "Employee");
                     response.Data = user;
+                    response.Succeeded = true;
                     return response;
                 }
 
@@ -112,17 +113,18 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                     UserName = x.UserName,
                     Gender = x.Gender,
                     PhoneNumber = x.PhoneNumber,
-                    TotalHolidayEntitlement = x.TotalHolidayEntitlement,
+                    TotalHolidayEntitlement = (int)LeaveEntitlement.TotalHolidayEntitlement,
                     ContractType = x.ContractType
-                }).ToListAsync();
+                }).OrderByDescending(x => x.DateCreated).ToListAsync();
 
-                foreach (var item in employees)
+                foreach (var emp in employees)
                 {
-                    var leaveTaken = _dbContext.EmployeeLeaveRequests
-                        .Where(x => x.EmployeeId == item.EmployeeId && x.Status != LeaveStatus.Rejected && x.Status != LeaveStatus.Cancelled)
+                    //var leaveTaken = employees.FirstOrDefault(x => x.EmployeeId == emp.EmployeeId).TotalHolidayEntitlement;
+                    var empLeaveDetails = _dbContext.EmployeeLeaveRequests
+                        .Where(x => x.EmployeeId == emp.EmployeeId && x.Status != LeaveStatus.Rejected && x.Status != LeaveStatus.Cancelled)
                         .ToList();
-                    item.NumberOfDaysTaken = leaveTaken.Sum(x => x.NumberOfDaysOff);
-                    item.LeaveBalance = item.TotalHolidayEntitlement - item.NumberOfDaysTaken;
+                    emp.NumberOfDaysTaken = empLeaveDetails.Sum(x => x.NumberOfDaysOff);
+                    emp.LeaveBalance = emp.TotalHolidayEntitlement - emp.NumberOfDaysTaken;// emp.TotalHolidayEntitlement - emp.NumberOfDaysTaken;
                 }
 
                 if (employees != null)
@@ -136,6 +138,29 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
             catch (Exception ex)
             {
                 response.StatusCode = 500;
+                response.Message = $"{ex.Message}: \n {ex.StackTrace}";
+                return response;
+            }
+        }
+
+        public async Task<Response<int>> GetAllEmployeesCountAsync()
+        {
+            var response = new Response<int>()
+            {
+                StatusCode = 200, Data = 0, Succeeded = true, Errors = null, Message = string.Empty
+            };
+
+            try
+            {
+                var employees = _userManager.Users.Count();
+                response.Data = employees;
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = 500;
+                response.Succeeded = false;
                 response.Message = $"{ex.Message}: \n {ex.StackTrace}";
                 return response;
             }

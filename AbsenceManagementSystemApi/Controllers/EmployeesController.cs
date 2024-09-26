@@ -13,10 +13,11 @@ namespace AbsenceManagementSystemApi.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
+        private string _userId;
 
         public EmployeesController(IEmployeeService employeeService)
         {
-            _employeeService = employeeService;
+            _employeeService = employeeService;            
         }
 
         // GET: EmployeesController
@@ -83,6 +84,15 @@ namespace AbsenceManagementSystemApi.Controllers
         {
             string employeeId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
             var result = await _employeeService.EmployeeLeaveEntitlement(employeeId);
+            return Ok(result);
+        }
+
+        // GET: EmployeesleaveDashboard
+        [HttpGet("employeesinfoforadmindashboard/counts")]
+        public async Task<IActionResult> EmployeesInfoForAdminDashboard()
+        {
+            _userId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var result = await _employeeService.EmployeesInfoForAdminDashboard(_userId);
             return Ok(result);
         }
     }
