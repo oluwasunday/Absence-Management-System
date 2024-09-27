@@ -10,6 +10,7 @@ using AbsenceManagementSystem.Services.Services;
 using AbsenceManagementSystemApi.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace AbsenceManagementSystemApi
 {
@@ -19,13 +20,28 @@ namespace AbsenceManagementSystemApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            /*var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddEnvironmentVariables() // Add environment variables
+                .Build();*/
+
             // Add services to the container.
 
-            
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
             // For Entity Framework Core
             builder.Services.AddDbContext<AMSDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AbsenceMgtConn")));
+
+            var apiKey2 = builder.Configuration["EMAIL_API_KEY"];
+            var apiKey = Environment.GetEnvironmentVariable("EMAIL_API_KEY");
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                throw new InvalidOperationException("Email API key is not set.");
+            }
+
+            var conFig = builder.Configuration.SetBasePath(Directory.GetCurrentDirectory()).AddEnvironmentVariables().Build();
+            builder.Services.AddSingleton<IConfiguration>(conFig);
 
             builder.Services.AddIdentity<Employee, IdentityRole>(options =>
             {
@@ -52,6 +68,7 @@ namespace AbsenceManagementSystemApi
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
             builder.Services.AddScoped<ITokenRepository, TokenRepository>();
             builder.Services.AddScoped<ITokenGeneratorService, TokenGeneratorService>();
+            builder.Services.AddScoped<IAbsencePredictorService, AbsencePredictorService>();
 
             // configure mail service
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

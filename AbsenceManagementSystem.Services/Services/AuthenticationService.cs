@@ -1,5 +1,6 @@
 ﻿using AbsenceManagementSystem.Core.Domain;
 using AbsenceManagementSystem.Core.DTO;
+using AbsenceManagementSystem.Core.Enums;
 using AbsenceManagementSystem.Core.Handlers;
 using AbsenceManagementSystem.Core.IRepositories;
 using AbsenceManagementSystem.Core.IServices;
@@ -53,6 +54,20 @@ namespace AbsenceManagementSystem.Services.Services
 
                 await _userManager.UpdateAsync(user);
 
+                // get dashboard
+                var employees = _userManager.Users.Count();//.GetAllAsQueryable().Where(x => x.IsActive).Count();
+                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable();
+                var dashboard = new AdminDashboard
+                {
+                    UserId = user.Id,
+                    NumberOfEmployees = employees,
+                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
+                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
+                    PendingLeave = leaves.Where(x => x.Status == LeaveStatus.Pending).Count()
+                };
+
+                result.AdminDashboard = dashboard;
+
                 response.StatusCode = (int)HttpStatusCode.OK;
                 response.Message = "Login Successful!";
                 response.Data = result;
@@ -71,7 +86,7 @@ namespace AbsenceManagementSystem.Services.Services
 
         private async Task<Response<bool>> ValidateUser(LoginDto model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email.ToLower().Trim());
             var response = new Response<bool>();
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {

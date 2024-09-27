@@ -83,8 +83,8 @@ namespace AbsenceManagementSystemApi.Controllers
         }
 
         // DELETE: LeaveRequestsController/Delete
-        [HttpDelete]
-        [Authorize(Roles = "Admin")]
+        [HttpDelete("{requesId}")]
+        [Authorize]
         public async Task<IActionResult> DeleteLeaveRequests(string requesId)
         {
             try
@@ -96,6 +96,14 @@ namespace AbsenceManagementSystemApi.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        // GET: PendingLeaveRequestsController
+        [HttpGet("allpendingrequests")]
+        public async Task<IActionResult> GetAllPendingRequest()
+        {
+            var result = await _leaveRequestService.GetAllPendingLeaveRequestsAsync();
+            return Ok(result);
         }
     }
 }

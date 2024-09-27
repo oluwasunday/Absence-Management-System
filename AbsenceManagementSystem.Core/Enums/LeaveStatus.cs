@@ -2,8 +2,13 @@
 {
     public enum LeaveStatus
     {
-        Pending = 0,
+        Rejected = 0,
+        Pending,
         Approved,
         Cancelled
+    }
+    public enum Season
+    {
+        Winter = 1, Spring, Summer, Autumn
     }
 }

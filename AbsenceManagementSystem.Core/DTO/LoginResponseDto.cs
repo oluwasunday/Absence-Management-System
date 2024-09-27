@@ -5,5 +5,6 @@
         public string Id { get; set; }
         public string Token { get; set; }
         public Guid RefreshToken { get; set; }
+        public AdminDashboard? AdminDashboard { get; set; }
     }
 }

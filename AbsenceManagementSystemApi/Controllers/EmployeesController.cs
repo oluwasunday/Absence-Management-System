@@ -3,6 +3,7 @@ using AbsenceManagementSystem.Core.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AbsenceManagementSystemApi.Controllers
 {
@@ -12,10 +13,13 @@ namespace AbsenceManagementSystemApi.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
+        private string _userId;
+        private IConfiguration _configuration;
 
-        public EmployeesController(IEmployeeService employeeService)
+        public EmployeesController(IEmployeeService employeeService, IConfiguration configuration)
         {
             _employeeService = employeeService;
+            _configuration = configuration;
         }
 
         // GET: EmployeesController
@@ -38,7 +42,7 @@ namespace AbsenceManagementSystemApi.Controllers
             }
             catch
             {
-                return BadRequest();
+                return BadRequest(employee);
             }
         }
 
@@ -62,7 +66,37 @@ namespace AbsenceManagementSystemApi.Controllers
         [HttpDelete("")]
         public async Task<IActionResult> DeleteEmployee(string employeeId)
         {
+            string userId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
             var result = await _employeeService.DeleteEmployeeAsync(employeeId);
+            return Ok(result);
+        }
+
+        // GET: EmployeesleaveDashboard
+        [HttpGet("employeedashboard")]
+        public async Task<IActionResult> EmployeeInfoForDashboard()
+        {
+            string employeeId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var result = await _employeeService.EmployeeInfoForDashboard(employeeId);
+            return Ok(result);
+        }
+
+        // GET: EmployeesleaveDashboard
+        [HttpGet("employeeleaveentitlement")]
+        public async Task<IActionResult> EmployeeLeaveEntitlement()
+        {
+            string employeeId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var result = await _employeeService.EmployeeLeaveEntitlement(employeeId);
+            return Ok(result);
+        }
+
+        // GET: EmployeesleaveDashboard
+        [HttpGet("employeesinfoforadmindashboard/counts")]
+        public async Task<IActionResult> EmployeesInfoForAdminDashboard()
+        {
+            //string apiKey = Environment.GetEnvironmentVariable("EMAIL_API_KEY");
+            
+            _userId = HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            var result = await _employeeService.EmployeesInfoForAdminDashboard(_userId);
             return Ok(result);
         }
     }

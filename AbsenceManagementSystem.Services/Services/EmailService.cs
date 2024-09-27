@@ -22,6 +22,7 @@ namespace AbsenceManagementSystem.Services.Services
         private readonly IAuthenticationService _authenticationService;
         private readonly EmailSettings _emailSettings;
         private IConfiguration _configuration;
+        private string _apiKey;
 
         public EmailService(IUnitOfWork unitOfWork, IConfiguration configuration, IAuthenticationService authenticationService, IOptions<EmailSettings> options)
         {
@@ -29,13 +30,18 @@ namespace AbsenceManagementSystem.Services.Services
             _configuration = configuration;
             _authenticationService = authenticationService;
             _emailSettings = options.Value;
+            _apiKey = _configuration["EMAIL_API_KEY"];
         }
 
         public async Task<Response<string>> SendEmailAsync(EmailRequestDto mailRequest)
         {
             try
             {
-                Configuration.Default.ApiKey.Add("api-key", _emailSettings.ApiKey);
+                string apiKey = _configuration["EMAIL_API_KEY"];
+                //Configuration.Default.ApiKey.Add("api-key", _emailSettings.ApiKey);
+                Configuration.Default.ApiKey.Add("api-key", apiKey);
+                var ttt = _apiKey;
+
 
                 var apiInstance = new TransactionalEmailsApi();
                 string SenderName = _emailSettings.DisplayName;
@@ -55,7 +61,7 @@ namespace AbsenceManagementSystem.Services.Services
                 Cc.Add(CcData);
 
 
-                string HtmlContent = $"<html><body><h1>This is my first transactional email for Absence Management System</h1></body></html>";
+                string HtmlContent = mailRequest.Body;// $"<html><body><h1>This is my first transactional email for Absence Management System</h1></body></html>";
                 string TextContent = mailRequest.Body;
                 string Subject = mailRequest.Subject;
                 //string ReplyToName = "John Doe";
