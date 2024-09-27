@@ -100,7 +100,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
 
             try
             {
-                var employees = await _userManager.Users.Select(x => new EmployeeDto
+                var employees = await _userManager.Users.Where(x => x.IsActive).Select(x => new EmployeeDto
                 {
                     EmployeeId = x.Id,
                     StartDate = x.StartDate,
@@ -121,7 +121,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                 {
                     //var leaveTaken = employees.FirstOrDefault(x => x.EmployeeId == emp.EmployeeId).TotalHolidayEntitlement;
                     var empLeaveDetails = _dbContext.EmployeeLeaveRequests
-                        .Where(x => x.EmployeeId == emp.EmployeeId && x.Status != LeaveStatus.Rejected && x.Status != LeaveStatus.Cancelled)
+                        .Where(x => x.EmployeeId == emp.EmployeeId && x.Status != LeaveStatus.Rejected && x.Status != LeaveStatus.Cancelled && x.IsDeleted == false)
                         .ToList();
                     emp.NumberOfDaysTaken = empLeaveDetails.Sum(x => x.NumberOfDaysOff);
                     emp.LeaveBalance = emp.TotalHolidayEntitlement - emp.NumberOfDaysTaken;// emp.TotalHolidayEntitlement - emp.NumberOfDaysTaken;
@@ -152,7 +152,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
 
             try
             {
-                var employees = _userManager.Users.Count();
+                var employees = _userManager.Users.Where(x => x.IsActive).Count();
                 response.Data = employees;
 
                 return response;
@@ -274,7 +274,7 @@ namespace AbsenceManagementSystem.Infrastructure.Repositories
                     return response;
                 }
 
-                var employee = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == employeeId);
+                var employee = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == employeeId && x.IsActive);
 
                 if (employee == null)
                 {

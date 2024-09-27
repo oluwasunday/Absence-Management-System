@@ -264,7 +264,7 @@ namespace AbsenceManagementSystem.Services.Services
                 await _unitOfWork.CompleteAsync();
 
                 {
-                    var employeeData = await _employeeService.GetEmployeeByIdAsync(id);
+                    var employeeData = await _employeeService.GetEmployeeByIdAsync(leaveRequest.EmployeeId);
                     // send mail
                     var mailPayload = new EmailRequestDto
                     {

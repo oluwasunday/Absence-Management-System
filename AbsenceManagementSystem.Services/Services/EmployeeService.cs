@@ -127,7 +127,7 @@ namespace AbsenceManagementSystem.Services.Services
                 };
 
                 var employees = await _employeeRepository.GetAllEmployeesCountAsync();
-                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable();
+                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && x.IsDeleted == false);
                 var dashboard = new AdminDashboard
                 {
                     UserId = userId,
