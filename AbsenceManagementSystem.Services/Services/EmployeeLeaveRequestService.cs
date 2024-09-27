@@ -362,6 +362,17 @@ namespace AbsenceManagementSystem.Services.Services
                     };
                 }
 
+                if(leaveRequest.Status == LeaveStatus.Approved)
+                {
+                    return new Response<bool>()
+                    {
+                        StatusCode = StatusCodes.Status400BadRequest,
+                        Succeeded = false,
+                        Data = false,
+                        Message = $"Item can not be deleted, it's already approved!"
+                    };
+                }
+
                 leaveRequest.IsActive = false;
                 leaveRequest.IsDeleted = true;
                 leaveRequest.DateModified = DateTime.Now;

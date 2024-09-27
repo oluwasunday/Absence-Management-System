@@ -86,7 +86,7 @@ namespace AbsenceManagementSystem.Services.Services
 
         private async Task<Response<bool>> ValidateUser(LoginDto model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email.ToLower().Trim());
             var response = new Response<bool>();
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {

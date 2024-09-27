@@ -83,8 +83,8 @@ namespace AbsenceManagementSystemApi.Controllers
         }
 
         // DELETE: LeaveRequestsController/Delete
-        [HttpDelete]
-        [Authorize(Roles = "Admin")]
+        [HttpDelete("{requesId}")]
+        [Authorize]
         public async Task<IActionResult> DeleteLeaveRequests(string requesId)
         {
             try

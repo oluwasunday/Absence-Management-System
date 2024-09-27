@@ -154,6 +154,17 @@ namespace AbsenceManagementSystem.Services.Services
 
                 if (count == 5) break;
             }
+            
+            if (!response.Any())
+            {
+                var pick = employeesRequests.FirstOrDefault(x => x.Status == LeaveStatus.Approved);
+                response.Add(new EmployeeLeavePredictResponse
+                {
+                    EmployeeName = pick.EmployeeName,
+                    LeaveType = (float)pick.LeaveType,
+                    Status = pick.Status == LeaveStatus.Approved
+                });
+            }
 
             Console.WriteLine("Predictions complete.");
             Debug.WriteLine("Predictions complete.");
