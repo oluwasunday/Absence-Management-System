@@ -126,14 +126,18 @@ namespace AbsenceManagementSystem.Services.Services
                     StatusCode = 200, Succeeded = true
                 };
 
+                var today = DateTime.Today;
+
                 var employees = await _employeeRepository.GetAllEmployeesCountAsync();
-                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && x.IsDeleted == false);
+                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && x.IsDeleted == false 
+                                && (x.Status != LeaveStatus.Rejected || x.Status != LeaveStatus.Cancelled)
+                                && today >= x.StartDate && today <= x.EndDate);
                 var dashboard = new AdminDashboard
                 {
                     UserId = userId,
                     NumberOfEmployees = employees.Data,
-                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
-                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
+                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved && x.LeaveType == LeaveTypes.SickLeave).Count(),
+                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved && x.LeaveType == LeaveTypes.CasualLeave).Count(),
                     PendingLeave = leaves.Where(x => x.Status == LeaveStatus.Pending).Count()
                 };
 

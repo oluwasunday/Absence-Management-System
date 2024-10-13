@@ -157,13 +157,28 @@ namespace AbsenceManagementSystem.Services.Services
             
             if (!response.Any())
             {
-                var pick = employeesRequests.FirstOrDefault(x => x.Status == LeaveStatus.Approved);
-                response.Add(new EmployeeLeavePredictResponse
+                var picks = employeesRequests.Where(x => x.Status == LeaveStatus.Approved);
+                var cc = 0;
+                foreach (var pick in picks)
                 {
-                    EmployeeName = pick.EmployeeName,
-                    LeaveType = (float)pick.LeaveType,
-                    Status = pick.Status == LeaveStatus.Approved
-                });
+                    if(response != null && response.Any())
+                    {
+                        var tempp = response.FirstOrDefault(x => x.EmployeeName == pick.EmployeeName);
+                        if (tempp?.EmployeeName == pick.EmployeeName)
+                        {
+                            continue;
+                        }
+                    }
+                    response.Add(new EmployeeLeavePredictResponse
+                    {
+                        EmployeeName = pick.EmployeeName,
+                        LeaveType = (float)pick.LeaveType,
+                        Status = pick.Status == LeaveStatus.Approved
+                    });
+                    cc++;
+                    if (cc == 3) break;
+                }
+                
             }
 
             Console.WriteLine("Predictions complete.");

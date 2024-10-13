@@ -55,14 +55,18 @@ namespace AbsenceManagementSystem.Services.Services
                 await _userManager.UpdateAsync(user);
 
                 // get dashboard
+                var today = DateTime.Today;
+
                 var employees = _userManager.Users.Count();//.GetAllAsQueryable().Where(x => x.IsActive).Count();
-                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable();
+                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && x.IsDeleted == false
+                                && (x.Status != LeaveStatus.Rejected || x.Status != LeaveStatus.Cancelled)
+                                && today >= x.StartDate && today <= x.EndDate);
                 var dashboard = new AdminDashboard
                 {
                     UserId = user.Id,
                     NumberOfEmployees = employees,
-                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
-                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved).Count(),
+                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved && x.LeaveType == LeaveTypes.SickLeave).Count(),
+                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved && x.LeaveType == LeaveTypes.CasualLeave).Count(),
                     PendingLeave = leaves.Where(x => x.Status == LeaveStatus.Pending).Count()
                 };
 
