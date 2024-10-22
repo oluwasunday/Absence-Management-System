@@ -99,7 +99,13 @@ namespace AbsenceManagementSystem.Services.Services
                     .ToList();
 
                 var totalLeaveEntitled = employeeInfo?.Data?.TotalHolidayEntitlement ?? 0;
-                var totalRemaining = totalLeaveEntitled - employeeLeaveInfo.Where(x => x.EmployeeId == employeeId && x.IsDeleted == false && x.Status != LeaveStatus.Cancelled && x.Status != LeaveStatus.Rejected).Sum(x => x.NumberOfDaysOff);
+                var totalLeaveTaken = employeeLeaveInfo.Where(x => x.EmployeeId == employeeId
+                                && x.IsDeleted == false
+                                && x.Status != LeaveStatus.Cancelled
+                                && x.Status != LeaveStatus.Rejected
+                                && x.Status == LeaveStatus.Approved)
+                                .Sum(x => x.NumberOfDaysOff);
+                var totalRemaining = totalLeaveEntitled - totalLeaveTaken;
 
                 var result = new EmployeeDashboardDto
                 {
@@ -129,15 +135,19 @@ namespace AbsenceManagementSystem.Services.Services
                 var today = DateTime.Today;
 
                 var employees = await _employeeRepository.GetAllEmployeesCountAsync();
-                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && x.IsDeleted == false 
-                                && (x.Status != LeaveStatus.Rejected || x.Status != LeaveStatus.Cancelled)
-                                && today >= x.StartDate && today <= x.EndDate);
+                var leaves = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().Where(x => x.IsActive && x.IsDeleted == false
+                                && (x.Status != LeaveStatus.Rejected || x.Status != LeaveStatus.Cancelled));
+                                //&& today >= x.StartDate && today <= x.EndDate);
                 var dashboard = new AdminDashboard
                 {
                     UserId = userId,
                     NumberOfEmployees = employees.Data,
-                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved && x.LeaveType == LeaveTypes.SickLeave).Count(),
-                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved && x.LeaveType == LeaveTypes.CasualLeave).Count(),
+                    EmployeesOnSickLeave = leaves.Where(x => x.Status == LeaveStatus.Approved 
+                                                && x.LeaveType == LeaveTypes.SickLeave
+                                                && today >= x.StartDate && today <= x.EndDate).Count(),
+                    EmployeesOnCasualLeave = leaves.Where(x => x.Status == LeaveStatus.Approved 
+                                                && x.LeaveType == LeaveTypes.CasualLeave
+                                                && today >= x.StartDate && today <= x.EndDate).Count(),
                     PendingLeave = leaves.Where(x => x.Status == LeaveStatus.Pending).Count()
                 };
 

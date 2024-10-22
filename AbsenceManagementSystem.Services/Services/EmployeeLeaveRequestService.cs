@@ -60,8 +60,17 @@ namespace AbsenceManagementSystem.Services.Services
 
                 //get employee
                 var employee = await _employeeService.GetEmployeeByIdAsync(requestDto.EmployeeId);
+                var employeeLeaveRecords = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable()
+                                        .Where(x => x.EmployeeId == requestDto.EmployeeId 
+                                        && x.Status == LeaveStatus.Approved
+                                        && x.IsDeleted == false)
+                                        .AsQueryable();
+                var employeeLeaveSum = employeeLeaveRecords.Where(x => x.Status != LeaveStatus.Cancelled
+                                        && x.Status != LeaveStatus.Pending)
+                                        .Sum(x => x.NumberOfDaysOff);
+                var totalLeaveRemaining = employee.Data.TotalHolidayEntitlement - employeeLeaveSum;
 
-                if(employee == null)
+                if (employee == null)
                 {
                     return new Response<EmployeeLeaveRequesResponsetDto>()
                     {
@@ -72,7 +81,7 @@ namespace AbsenceManagementSystem.Services.Services
                     };
                 }
 
-                if(employee.Data.TotalHolidayEntitlement - requestDto.NumberOfDaysOff < 0)
+                if(totalLeaveRemaining - requestDto.NumberOfDaysOff < 0)
                 {
                     return new Response<EmployeeLeaveRequesResponsetDto>()
                     {
@@ -257,6 +266,19 @@ namespace AbsenceManagementSystem.Services.Services
             {
                 var leaveRequest = await _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable().FirstOrDefaultAsync(x => x.Id == id && x.IsActive && !x.IsDeleted);
 
+                var employeeLeaveRecords = _unitOfWork.EmployeeLeaveRequests.GetAllAsQueryable()
+                                            .Where(x => x.EmployeeId == leaveRequest.EmployeeId
+                                            && x.Status == LeaveStatus.Approved)
+                                            .Select(x => x.NumberOfDaysOff)
+                                            .Sum();
+
+                var additionalMailMessage = string.Empty;
+                if (employeeLeaveRecords + leaveRequest.NumberOfDaysOff > 20)
+                {
+                    status = LeaveStatus.Rejected;
+                    additionalMailMessage += " because you do not have enough leave balance";
+                }
+
                 leaveRequest.Status = status;
                 leaveRequest.DateModified = DateTime.Now;
 
@@ -269,7 +291,7 @@ namespace AbsenceManagementSystem.Services.Services
                     var mailPayload = new EmailRequestDto
                     {
                         Subject = $"Leave Request {status.ToString()}",
-                        Body = $@"Hi {leaveRequest.EmployeeName}! <br><br>Your leave request with start date: {leaveRequest.StartDate} and end date: {leaveRequest.EndDate} has beed {status.ToString()}.<br><br>Regards.",
+                        Body = $@"Hi {leaveRequest.EmployeeName}! <br><br>Your leave request with start date: {leaveRequest.StartDate} and end date: {leaveRequest.EndDate} has been {status.ToString()}{additionalMailMessage}.<br><br>Regards.",
                         CcEmail = employeeData.Data.Email,
                         CcName = employeeData.Data.LastName,
                         ToEmail = employeeData.Data.Email,
